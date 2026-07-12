@@ -6,9 +6,16 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.runnables import chain
+from langsmith import traceable
 
 import pypdf
 from decouple import config
+
+
+os.environ["LANGSMITH_API_KEY"] = config("LANGSMITH_API_KEY")
+os.environ["LANGSMITH_TRACING"] = config("LANGSMITH_TRACING")
+os.environ["LANGSMITH_PROJECT"] = config("LANGSMITH_PROJECT")
+os.environ["LANGSMITH_ENDPOINT"] = config("LANGSMITH_ENDPOINT")
 
 
 OPENROUTER_API_KEY = config("OPENROUTER_API_KEY")
@@ -66,11 +73,32 @@ def indexing(chunks):
 print(len(indexing(chunks=chunks)))    
 
 
-results = vector_store.similarity_search(
-    "How many distribution centers does Nike have in the US?"
-)
+@traceable(name="Ask Question")
+def ask_question(question):
+    result = vector_store.similarity_search(question)
+    return result[0]    
 
-print(results[0])
+
+result1 = ask_question(question="How many distribution centers does Nike have in the US?")
+print(result1)
+
+@traceable(name="Ask Question With Score")
+def ask_question_with_score(question):
+    results = vector_store.similarity_search_with_score(question)
+    doc, score = results[0]
+    return doc, score
+    
+
+result2 = ask_question_with_score("What was Nike's revenue in 2023?")
+doc, score = result2[0], result2[1]
+print(doc)
+print(score)
+
+
+# result1 = ask_question(question="How many distribution centers does Nike have in the US?")
+# print(result1[0])
+
+
 
 # results = await vector_store.asimilarity_search("When was Nike incorporated?")
 
@@ -81,10 +109,9 @@ print(results[0])
 # Note that providers implement different scores; the score here
 # is a distance metric that varies inversely with similarity.
 
-results = vector_store.similarity_search_with_score("What was Nike's revenue in 2023?")
-doc, score = results[0]
-print(f"Score: {score}\n")
-print(doc)
+
+# print(f"Score: {score}\n")
+# print(doc)
 ###########################################################
 
 # Return documents based on similarity to an embedded query:
