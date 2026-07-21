@@ -1,0 +1,13 @@
+[project]
+name = "research-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "deepagents>=0.6.12",
+    "langchain-openrouter>=0.2.6",
+    "langgraph-cli[inmem]>=0.4.31",
+    "python-decouple>=3.8",
+    "tavily-python>=0.7.26",
+]
